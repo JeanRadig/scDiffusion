@@ -1,0 +1,164 @@
+From fda35be0cd334fb64e80b150c8dfb8dc04df2acd Mon Sep 17 00:00:00 2001
+From: jradig <jean.radig@uni-heidelberg.de>
+Date: Thu, 6 Jun 2024 06:00:10 +0000
+Subject: [PATCH] Modified train.sh in function of the arguments that can
+ actually be passed, as defined for each function. Previous commands could not
+ run due to unexpected arguments such as e.g. --num_genes for the diffusion
+ and classifier. Also modified the arguments name, when they did not
+ correspond to those as defined in the functions. Modified
+ script_diffusion_umap.ipynb to provide some documentation at the top to guide
+ the user. Put the file paths definition on top, to make the user aware of
+ what he needs to change.
+
+---
+ exp_script/script_diffusion_umap.ipynb | 86 +++++++++++++++++++++++++-
+ train.sh                               | 10 +--
+ 2 files changed, 88 insertions(+), 8 deletions(-)
+
+diff --git a/exp_script/script_diffusion_umap.ipynb b/exp_script/script_diffusion_umap.ipynb
+index 56e248a..e5ccc52 100644
+--- a/exp_script/script_diffusion_umap.ipynb
++++ b/exp_script/script_diffusion_umap.ipynb
+@@ -9,6 +9,86 @@
+     "!CUDA_VISIBLE_DEVICE=0"
+    ]
+   },
++  {
++   "cell_type": "markdown",
++   "metadata": {},
++   "source": [
++    "Before running the following code, ensure that you have trained the VAE model, the diffusion model, and the classifier model.\n",
++    "\n",
++    "Given an AnnData file you wish to analyze, named `anndata.h5ad`, please follow these steps in your command line to create the necessary input data:\n",
++    "\n",
++    "1. **Train VAE**:\n",
++    "   - Prior to training, create the folder `path/to/saved_VAE_model`.\n",
++    "   - In the terminal, navigate to the `VAE` directory:\n",
++    "     ```bash\n",
++    "     cd VAE\n",
++    "     ```\n",
++    "   - Run the following command to train the Autoencoder:\n",
++    "     ```bash\n",
++    "     echo \"Training Autoencoder, this might take a long time\" \n",
++    "     CUDA_VISIBLE_DEVICES=0 python VAE_train.py --data_dir 'path/to/anndata.h5ad' --num_genes 18996 --save_dir 'path/to/saved_VAE_model' --max_steps 200000\n",
++    "     echo \"Training Autoencoder done\"\n",
++    "     ```\n",
++    "\n",
++    "2. **Train the Diffusion Model**:\n",
++    "   - Prior to training, create the folder `path/to/saved_diffusion_model`.\n",
++    "   - In the terminal, navigate back to the root directory:\n",
++    "     ```bash\n",
++    "     cd ..\n",
++    "     ```\n",
++    "   - Run the following command to train the diffusion backbone:\n",
++    "     ```bash\n",
++    "     echo \"Training diffusion backbone\"\n",
++    "     CUDA_VISIBLE_DEVICES=0 python cell_train.py --data_dir 'path/to/anndata.h5ad'  --vae_path 'path/to/saved_VAE_model/VAE_checkpoint.pt' \\\n",
++    "         --save_dir 'path/to/saved_diffusion_model' --model_name 'my_diffusion' --save_interval 20000\n",
++    "     echo \"Training diffusion backbone done\"\n",
++    "     ```\n",
++    "\n",
++    "3. **Train the Classifier**:\n",
++    "   - Prior to training, create the folder `path/to/saved_classifier_model`.\n",
++    "   - Run the following command to train the classifier:\n",
++    "     ```bash\n",
++    "     echo \"Training classifier\"\n",
++    "     CUDA_VISIBLE_DEVICES=0 python classifier_train.py --data_dir 'path/to/anndata.h5ad' --model_path \"path/to/saved_classifier_model\" \\\n",
++    "         --iterations 40000 --vae_path 'path/to/saved_VAE_model/VAE_checkpoint.pt'\n",
++    "     echo \"Training classifier, done\"\n",
++    "     ```\n",
++    "\n",
++    "Once the models are trained, you need to create the `.npz` files which will serve as input for the following steps. To do this:\n",
++    "\n",
++    "1. **Unconditional Sampling (Generate Data from Diffusion Model)**:\n",
++    "   - Prior to sampling, create the folder `path/to/saved_unconditional_sampling`.\n",
++    "   - Run the following command to perform unconditional sampling:\n",
++    "     ```bash\n",
++    "     # Unconditional sampling\n",
++    "     python cell_sample.py --model_path \"path/to/saved_diffusion_model/checkpoint.pt\" --sample_dir \"path/to/saved_unconditional_sampling\"\n",
++    "     ```\n",
++    "\n",
++    "2. **Conditional Sampling (Generate Data from Classifier Model)**:\n",
++    "   - Prior to sampling, create the folder `path/to/saved_conditional_sampling`.\n",
++    "   - You also need to modify the `main()` function in `classifier_sample.py` to create the samples based on your specified condition. **NEEDS MORE DOCUMENTATION: PROVIDE CLEAR EXAMPLE**\n",
++    "   - Run the following command to perform conditional sampling:\n",
++    "     ```bash\n",
++    "     # Conditional sampling \n",
++    "     python classifier_sample.py --model_path \"path/to/saved_diffusion_model/checkpoint.pt\" --classifier_path \"path/to/saved_classifier_model/checkpoint.pt\" --sample_dir \"path/to/saved_conditional_sampling\"\n",
++    "     ```\n",
++    "\n",
++    "Ensure that you replace `'path/to/anndata.h5ad'`, `'path/to/saved_VAE_model'`, `'path/to/saved_diffusion_model'`, and `'path/to/saved_classifier_model'` with the actual paths in your system. Additionally, make sure to adjust any other parameters according to your specific setup and requirements."
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "### CHANGE ACCORDING TO YOUR FILE SYSTEM ###\n",
++    "path_to_anndata = '/data1/lep/Workspace/guided-diffusion/data/tabula_muris/all.h5ad'\n",
++    "path_to_saved_VAE_model = '/data1/lep/Workspace/guided-diffusion/VAE/checkpoint/muris_scimilarity_lognorm_finetune/model_seed=0_step=150000.pt'\n",
++    "path_to_unconditional_sample = '/data1/lep/Workspace/guided-diffusion/output/muris_scimilarity.npz'\n",
++    "# In a later cell, also modify the path to the conditionally generated samples. "
++   ]
++  },
+   {
+    "cell_type": "code",
+    "execution_count": 2,
+@@ -53,7 +133,7 @@
+     "        hidden_dim=128,\n",
+     "        decoder_activation='ReLU',\n",
+     "    )\n",
+-    "    autoencoder.load_state_dict(torch.load('/data1/lep/Workspace/guided-diffusion/VAE/checkpoint/muris_scimilarity_lognorm_finetune/model_seed=0_step=150000.pt'))\n",
++    "    autoencoder.load_state_dict(torch.load(path_to_saved_VAE_model))\n",
+     "    return autoencoder"
+    ]
+   },
+@@ -89,7 +169,7 @@
+     }
+    ],
+    "source": [
+-    "adata = sc.read_h5ad('/data1/lep/Workspace/guided-diffusion/data/tabula_muris/all.h5ad')\n",
++    "adata = sc.read_h5ad(path_to_anndata)\n",
+     "\n",
+     "adata = adata[np.where(adata.obs['celltype'].values.isnull()==0)[0]][::5]\n",
+     "\n",
+@@ -127,7 +207,7 @@
+     }
+    ],
+    "source": [
+-    "npzfile=np.load('/data1/lep/Workspace/guided-diffusion/output/muris_scimilarity.npz',allow_pickle=True)\n",
++    "npzfile=np.load(path_to_unconditional_sample,allow_pickle=True)\n",
+     "cell_gen_all = npzfile['cell_gen'][::5]\n",
+     "\n",
+     "autoencoder = load_VAE()\n",
+diff --git a/train.sh b/train.sh
+index b6cdf24..035eb6b 100644
+--- a/train.sh
++++ b/train.sh
+@@ -1,15 +1,15 @@
+ cd VAE
+ echo "Training Autoencoder, this might take a long time"
+-CUDA_VISIBLE_DEVICES=0 python VAE_train.py --data_dir '/data1/lep/Workspace/guided-diffusion/data/tabula_muris/all.h5ad' --num_genes 18996 --save_dir '../checkpoint/AE/my_VAE' --max_steps 200000
++CUDA_VISIBLE_DEVICES=0 python VAE_train.py --data_dir 'path/to/anndata.h5ad' --num_genes 18996 --save_dir 'path/to/saved_VAE_model' --max_steps 200000
+ echo "Training Autoencoder done"
+ 
+ cd ..
+ echo "Training diffusion backbone"
+-CUDA_VISIBLE_DEVICES=0 python cell_train.py --data_dir '/data1/lep/Workspace/guided-diffusion/data/tabula_muris/all.h5ad' --num_genes 18996 --ae_dir 'checkpoint/AE/my_VAE/model_seed=0_step=150000.pt' \
+-    --model_name 'my_diffusion' --lr_anneal_steps 800000
++CUDA_VISIBLE_DEVICES=0 python cell_train.py --data_dir 'path/to/anndata.h5ad'  --vae_path 'path/to/saved_VAE_model/VAE_checkpoint.pt' \
++    --save_dir 'path/to/saved_diffusion_model' --model_name 'my_diffusion' --save_interval 20000
+ echo "Training diffusion backbone done"
+ 
+ echo "Training classifier"
+-CUDA_VISIBLE_DEVICES=0 python classifier_train.py --data_dir '/data1/lep/Workspace/guided-diffusion/data/tabula_muris/all.h5ad' --classifier_dir "checkpoint/classifier/my_classifier" \
+-    --iterations 400000 --num_genes 18996 --ae_dir 'checkpoint/AE/my_VAE/model_seed=0_step=150000.pt'
++CUDA_VISIBLE_DEVICES=0 python classifier_train.py --data_dir 'path/to/anndata.h5ad' --model_path "path/to/saved_classifier_model" \
++    --iterations 40000 --vae_path 'path/to/saved_VAE_model/VAE_checkpoint.pt'
+ echo "Training classifier, done"
+\ No newline at end of file
+-- 
+2.17.1
+
