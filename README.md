@@ -1,3 +1,6 @@
+# Jean's instructions
+My instructions can be found in the folder Jean_Instructions.
+
 ## scDiffusion: Conditional Generation of High-Quality Single-Cell Data Using Diffusion Model
 Welcome to the code base for scDiffusion, a model developed for the generation of scRNA-seq data. This model combines the power of latent diffusion model and pre-trained model.
 
