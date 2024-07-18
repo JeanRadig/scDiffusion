@@ -274,6 +274,7 @@ def main(cell_type=[0], multi=False, inter=False, weight=[10,10]):
 
     dist.barrier()
     logger.log("sampling complete")
+    return arr
 
 
 def create_argparser(celltype=[0], weight=[10,10]):
@@ -321,8 +322,23 @@ def create_argparser(celltype=[0], weight=[10,10]):
 
 
 if __name__ == "__main__":
+    cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
+       'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
+       'Trachea']
+    
+    parser = create_argparser()
+    args = parser.parse_args()
+    
+    # Create a custom path for each tissue type
+    save_dir = args.sample_dir
+
+    for typ in range(12):
+        print(f'----- tissue {cato[typ]} -----')
+        path_to_save = save_dir + f'/tissue_{cato[typ]}'
+        to_save = main(cell_type = [typ])
+        save_data(to_save, typ, path_to_save)
     # for conditional generation
-    main(cell_type=[2])
+    #main(cell_type=[2])
     # for type in range(15):#[0,1,2,3,4,5]:
     #     main(cell_type=[type])
 
