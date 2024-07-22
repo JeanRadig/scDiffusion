@@ -1,4 +1,4 @@
-# How to run scDiffusion: unconditional sampling
+# How to run scDiffusion on Tabula Muris dataset: unconditional sampling
 
 First we are going to see how we can simulate similar data to the input one. In this first step the goal is to augment already existing data. We are asking the model to create samples that are similar to the input one. The muris dataset contains data that correspond to several tissues. We are going to ask the model to produce, for each of these tissues, a sample of similar type. Generating data in this way is called *unconditional data sampling.* 
 
@@ -9,7 +9,7 @@ First we are going to see how we can simulate similar data to the input one. In 
 
 # **Training the models: train the VAE, the diffusion model and the classifier**
 
-Given an AnnData file you wish to analyze, named `anndata.h5ad`, please follow these steps in your command line to create the necessary input data. 
+Given the tabula muris dataset is downloaded under a path, e.g. `'/workspace/projects/001_scDiffusion/data/data_in/tabula_muris/all.h5ad'`, please follow the steps below to be able to reproduce the unconditional and conditional results from the paper  [scDiffusion paper](https://arxiv.org/abs/2401.03968).
 
 ## Train the VAE
 
@@ -36,11 +36,17 @@ Given an AnnData file you wish to analyze, named `anndata.h5ad`, please follow t
     cd VAE
     ```
     
-- Run the following command to train the Autoencoder:
+- Run the following command to train the Autoencoder (you have *cd*ed in the folder where VAE_train.py is located):
     
     ```bash
     echo "Training Autoencoder, this might take a long time"
     CUDA_VISIBLE_DEVICES=0 python VAE_train.py --data_dir '/workspace/projects/001_scDiffusion/data/data_in/tabula_muris/all.h5ad' --num_genes 18996 --state_dict "/workspace/projects/001_scDiffusion/scripts/scDiffusion/annotation_model_v1" --save_dir '../checkpoint/AE/my_VAE' --max_steps 200000 --max_minutes 600
+    echo "Training Autoencoder done"
+    ```
+- In general, the above amounts to:
+    ```bash
+    echo "Training Autoencoder, this might take a long time"
+    CUDA_VISIBLE_DEVICES=0 python /path/to/VAE_train.py --data_dir '/path/where/you/saved/tabula_muris/all.h5ad' --num_genes 18996 --state_dict "/path/where/you/saved/scimilarity/pretrained/wrights/annotation_model_v1" --save_dir '/dir/where/to/save/the/trained/VAE/model/' --max_steps 200000 --max_minutes 600
     echo "Training Autoencoder done"
     ```
     
@@ -103,11 +109,20 @@ Given an AnnData file you wish to analyze, named `anndata.h5ad`, please follow t
     
 
 **You need to do:**
+You have *cd*ed in the folder where cell_train.py is located.
 
 ```jsx
 echo "Training diffusion backbone"
-CUDA_VISIBLE_DEVICES=0 python cell_train.py --data_dir '/workspace/projects/001_scDiffusion/data/data_in/tabula_muris/all.h5ad'  --vae_path '/workspace/projects/001_scDiffusion/scripts/scDiffusion/checkpoint/AE/my_VAE/model_seed=0_step=40753.pt' \
+CUDA_VISIBLE_DEVICES=0 python cell_train.py --data_dir '/workspace/projects/001_scDiffusion/data/data_in/tabula_muris/all.h5ad'  --vae_path '/workspace/projects/001_scDiffusion/scripts/scDiffusion/checkpoint/AE/my_VAE/model_seed=0_step=40753.pt'  \
     --save_dir '/workspace/projects/001_scDiffusion/scripts/output/diffusion_checkpoint' --model_name 'my_diffusion' --lr_anneal_steps 80000
+echo "Training diffusion backbone done"
+```
+
+In general, the above amounts to do:
+```bash
+echo "Training diffusion backbone"
+CUDA_VISIBLE_DEVICES=0 python path/to/cell_train.py --data_dir '/path/where/you/saved/tabula_muris/all.h5ad' --vae_path '/path/where/you/saved/VAE/model.pt'   \
+    --save_dir '/dir/where/to/save/the/trained/diffusion/model/' --model_name 'name_you_want_to_give' --lr_anneal_steps 80000
 echo "Training diffusion backbone done"
 ```
 
@@ -143,7 +158,7 @@ CUDA_VISIBLE_DEVICES=0 python classifier_train.py --data_dir '/workspace/project
 echo "Training classifier, done"
 ```
 
-## Generate latent spaces
+## Generate latent spaces: unconditional and conditional tabula muris
 
 Once the models have been trained, we can create new samples. To this end, we first need to create the latent spaces that correspond to the simulated data. The last step will be to decode these latent spaces to retrieve the corresponding anndata. Several data can be created. We can create unconditional samples (these corresponds to data that should be as close as possible as the input data, essentially corresponding to data enhancement), and we can also create predictive data, for example we can try to create a set of adata that would make the interpolation between condition 1 and condition 2 in the dataset. 
 
@@ -154,10 +169,18 @@ Once the models have been trained, we can create new samples. To this end, we fi
     # Unconditional sampling
     python cell_sample.py --model_path "/workspace/projects/001_scDiffusion/scripts/output/diffusion_checkpoint/my_diffusion/model080000.pt" --sample_dir "/workspace/projects/001_scDiffusion/scripts/output/classifier_simulated"
     ```
+    In general, the above amounts to do:
+    ```bash
+    python path/to/cell_sample.py --model_path "/path/where/you/saved/diffusion/model.pt" --sample_dir "/file/where/to/save/the/trained/latent/space/latent/space/example.npz"
+    ```
+    Note that though it is a file you have to give, the argument is called --sample_dir. 
+
+
+2. **Conditional sampling**
+
+    ***!! You have to modify classifier_sample.py***
     
-    **b. Modification to classifier_sample.py.**
-    
-    **Example usage:**
+    **Modify the main function of classifier_sample.py as follows**
     
     In order to be able to run multiple tissue types, one has to provide the information of where to store the simulated data in the main. 
     
@@ -186,38 +209,39 @@ Once the models have been trained, we can create new samples. To this end, we fi
     
     Where the modification has been to return what is saved in save_data from the main, and to allocate a specific path to it.  
     
-    ## From latent space to anndata
-    
-    We now need to read the produced latent spaces into anndata:
-    
-    ```jsx
-    cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
-           'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
-           'Trachea']
-    
-    rf = []
-    
-    cell_gen_all = []
-    gen_class = []
-    length_per_type = 3000
-    
-    for i in range(12):
-        npzfile=np.load(f'../output/muris_condi/muristissue_{cat[i]}.npz',allow_pickle=True)
-        cell_gen_all.append(npzfile['cell_gen'][:length_per_type])
-        gen_class+=[cato[i]]*length_per_type
-    cell_gen_all = np.concatenate(cell_gen_all,axis=0)
-    
-    autoencoder = load_VAE()
-    cell_gen_all = autoencoder(torch.tensor(cell_gen_all).cuda(),return_decoded=True).cpu().detach().numpy()
-    
-    sim_adata = ad.AnnData(X=cell_gen_all)
-    sim_adata.obs['celltype'] = gen_class
-    ```
-    
-    ![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%201.png)
+## From latent space to anndata
+
+1. **Unconditional**
+We now need to read the produced latent spaces into anndata.
+
+```jsx
+cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
+        'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
+        'Trachea']
+
+rf = []
+
+cell_gen_all = []
+gen_class = []
+length_per_type = 3000
+
+for i in range(12):
+    npzfile=np.load(f'../output/muris_condi/muristissue_{cat[i]}.npz',allow_pickle=True)
+    cell_gen_all.append(npzfile['cell_gen'][:length_per_type])
+    gen_class+=[cato[i]]*length_per_type
+cell_gen_all = np.concatenate(cell_gen_all,axis=0)
+
+autoencoder = load_VAE()
+cell_gen_all = autoencoder(torch.tensor(cell_gen_all).cuda(),return_decoded=True).cpu().detach().numpy()
+
+sim_adata = ad.AnnData(X=cell_gen_all)
+sim_adata.obs['celltype'] = gen_class
+```
+
+![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%201.png)
     
 
-# How to run scDiffusion: conditional sampling
+# How to run scDiffusion: gradient interpolation on Waddington dataset
 
 ## Data
 
