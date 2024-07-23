@@ -1,4 +1,4 @@
-# How to run scDiffusion on Tabula Muris dataset: unconditional sampling
+# How to run scDiffusion on Tabula Muris dataset
 
 First we are going to see how we can simulate similar data to the input one. In this first step the goal is to augment already existing data. We are asking the model to create samples that are similar to the input one. The muris dataset contains data that correspond to several tissues. We are going to ask the model to produce, for each of these tissues, a sample of similar type. Generating data in this way is called *unconditional data sampling.* 
 
