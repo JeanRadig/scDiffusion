@@ -205,41 +205,73 @@ Once the models have been trained, we can create new samples. To this end, we fi
     
     The result is 12 anndata outputs: 
     
-    ![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled.png)
+
+    <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled.png" alt="Image description" style="max-width: 100%; height: auto;">
+    </div>
     
     Where the modification has been to return what is saved in save_data from the main, and to allocate a specific path to it.  
     
 ## From latent space to anndata
 
 1. **Unconditional**
-We now need to read the produced latent spaces into anndata.
+Now that we have created the latent space we need to go back to data space. This is done by running the latent space in the VAE decoder. This is done by running the commands found in the jupyter notebook *unconditional_tabula_muris.ipynb*. The result thereof is as follows:
 
-```jsx
-cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
-        'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
-        'Trachea']
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/unconditional_result.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
-rf = []
+2. **Conditional** 
+Follow the instructions in the jupyter notebook *conditional_tabula_muris.ipynb*. 
+You get results that will look as follows.
 
-cell_gen_all = []
-gen_class = []
-length_per_type = 3000
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Bladder.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
-for i in range(12):
-    npzfile=np.load(f'../output/muris_condi/muristissue_{cat[i]}.npz',allow_pickle=True)
-    cell_gen_all.append(npzfile['cell_gen'][:length_per_type])
-    gen_class+=[cato[i]]*length_per_type
-cell_gen_all = np.concatenate(cell_gen_all,axis=0)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Heart_and_Aorta.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
-autoencoder = load_VAE()
-cell_gen_all = autoencoder(torch.tensor(cell_gen_all).cuda(),return_decoded=True).cpu().detach().numpy()
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Kidney.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
-sim_adata = ad.AnnData(X=cell_gen_all)
-sim_adata.obs['celltype'] = gen_class
-```
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Limb_Muscle.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%201.png)
-    
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Liver.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Lung.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Mammary_Gland.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Marrow.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Spleen.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Thymus.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Tongue.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Trachea.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
 # How to run scDiffusion: gradient interpolation on Waddington dataset
 
@@ -251,11 +283,15 @@ sim_adata.obs['celltype'] = gen_class
 
 Here we are interested in simulating data that is out of distribution. The typical usage would be for example if we have two conditions A and B, and we would like to simulate 10 data sets between these two points. The idea is to interpolate between two conditions. For this problem, we are going to use the Waddington dataset. In this dataset, single cell RNA-seq was performed at different time points, twice a day for several days. The full dataset looks like:
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%202.png)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled%202.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
 Here, we would like to predict time points between D2.5 and D5. We are therefore going to give as training set the following (the above minus D3 - D4.5).
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%203.png)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled%203.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
 Hence, we would like to simulate data between the 5th data point (D2.5 comes in 5th position as we start counting from from 0) and the 6th data point (D5 is in 6th position in this modified dataset). 
 
@@ -330,7 +366,7 @@ And change the number of classes in:
 
 ```python
 defaults.update(classifier_and_diffusion_defaults())
-    defaults['num_class']= 15e
+    defaults['num_class']= 15
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser
@@ -441,12 +477,19 @@ cell_gen.shape
 
 And I obtain:
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%204.png)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled%204.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
 
 Which yield nothing alike the original data:
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%205.png)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled%205.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
+
 
 Where sim is the simulated data and ori is the original dataset. Furthermore note that the simulated data all overlap, hence the step-wise interpolation did not work. 
 
-![Untitled](How%20to%20run%20scDiffusion%20unconditional%20sampling%20aa5b68b30b0f40418bdd93e4cf63a90e/Untitled%206.png)
+<div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
+    <img src="images/Untitled%206.png" alt="Image description" style="max-width: 100%; height: auto;">
+</div>
