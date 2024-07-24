@@ -287,7 +287,7 @@ Here we are interested in simulating data that is out of distribution. The typic
     <img src="images/Untitled%202.png" alt="Image description" style="max-width: 100%; height: auto;">
 </div>
 
-Here, we would like to predict time points between D2.5 and D5. We are therefore going to give as training set the following (the above minus D3 - D4.5).
+Here, we would like to predict time points between D2.5 and D5. We are therefore going to give as training set the following (the above minus D3, D3.5, D4, D4.5).
 
 <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
     <img src="images/Untitled%203.png" alt="Image description" style="max-width: 100%; height: auto;">
