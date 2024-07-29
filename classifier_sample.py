@@ -315,16 +315,17 @@ def create_argparser(celltype=[0], weight=[10,10]):
     )
     defaults.update(model_and_diffusion_defaults())
     defaults.update(classifier_and_diffusion_defaults())
-    defaults['num_class']=12
+    defaults['num_class']=14
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser
 
 
 if __name__ == "__main__":
-    cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
-       'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
-       'Trachea']
+
+    cato = ['OPC-like', 'AC-like', 'TAM-BDM', 'Oligodendrocyte',
+            'TAM-MG', 'NPC-like', 'Mono', 'CD4-CD8', 'Endothelial',
+            'OPC', 'DC', 'MES-like', 'Mural cell', 'B cell']
     
     parser = create_argparser()
     args = parser.parse_args()
@@ -332,11 +333,30 @@ if __name__ == "__main__":
     # Create a custom path for each tissue type
     save_dir = args.sample_dir
 
-    for typ in range(12):
+    for typ in range(14):
         print(f'----- tissue {cato[typ]} -----')
         path_to_save = save_dir + f'/tissue_{cato[typ]}'
         to_save = main(cell_type = [typ])
         save_data(to_save, typ, path_to_save)
+
+
+
+
+    # cato = ['Bladder', 'Heart_and_Aorta', 'Kidney', 'Limb_Muscle', 'Liver',
+    #    'Lung', 'Mammary_Gland', 'Marrow', 'Spleen', 'Thymus', 'Tongue',
+    #    'Trachea']
+    
+    # parser = create_argparser()
+    # args = parser.parse_args()
+    
+    # # Create a custom path for each tissue type
+    # save_dir = args.sample_dir
+
+    # for typ in range(12):
+    #     print(f'----- tissue {cato[typ]} -----')
+    #     path_to_save = save_dir + f'/tissue_{cato[typ]}'
+    #     to_save = main(cell_type = [typ])
+    #     save_data(to_save, typ, path_to_save)
     # for conditional generation
     #main(cell_type=[2])
     # for type in range(15):#[0,1,2,3,4,5]:

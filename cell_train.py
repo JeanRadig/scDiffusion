@@ -8,7 +8,8 @@ from guided_diffusion import dist_util, logger
 # from guided_diffusion.cell_datasets import load_data
 # from guided_diffusion.cell_datasets_WOT import load_data
 # from guided_diffusion.cell_datasets_sapiens import load_data
-from guided_diffusion.cell_datasets_muris import load_data
+# from guided_diffusion.cell_datasets_muris import load_data
+from guided_diffusion.cell_datasets_GB import load_data
 from guided_diffusion.resample import create_named_schedule_sampler
 from guided_diffusion.script_util import (
     model_and_diffusion_defaults,

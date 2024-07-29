@@ -16,8 +16,9 @@ from guided_diffusion import dist_util, logger
 from guided_diffusion.fp16_util import MixedPrecisionTrainer
 # from guided_diffusion.cell_datasets_pbmc import load_data
 # from guided_diffusion.cell_datasets_WOT import load_data
-from guided_diffusion.cell_datasets_muris import load_data
+# from guided_diffusion.cell_datasets_muris import load_data
 # from guided_diffusion.cell_datasets_sapiens import load_data
+from guided_diffusion.cell_datasets_GB import load_data
 from guided_diffusion.resample import create_named_schedule_sampler
 from guided_diffusion.script_util import (
     add_dict_to_argparser,
@@ -230,7 +231,7 @@ def create_argparser():
         start_guide_time=500,
     )
     defaults.update(classifier_and_diffusion_defaults())
-    defaults['num_class']= 12
+    defaults['num_class']= 14
     parser = argparse.ArgumentParser()
     add_dict_to_argparser(parser, defaults)
     return parser
