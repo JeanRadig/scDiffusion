@@ -493,3 +493,6 @@ Where sim is the simulated data and ori is the original dataset. Furthermore not
 <div style="margin-top: 20px; margin-bottom: 20px; text-align: center;">
     <img src="images/Untitled%206.png" alt="Image description" style="max-width: 100%; height: auto;">
 </div>
+
+# Acknoledgment
+Thanks @kiristern for the provided help. 
